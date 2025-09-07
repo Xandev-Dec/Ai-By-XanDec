@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ai By XanDec</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            padding: 1rem;
+        }
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .chat-bubble-user {
+            background-color: #4f46e5;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble-ai {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+        }
+        .image-preview {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        #codePreviewContainer {
+            max-width: 400px;
+            max-height: 12rem;
+            overflow: auto;
+            background-color: #111827; /* Tailwind gray-900 */
+            color: #22c55e; /* Tailwind green-400 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Main Container -->
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[95vh] md:h-[90vh]">
+        
+        <!-- Header -->
+        <div class="bg-indigo-700 text-white p-5 text-center text-xl font-bold rounded-t-2xl">
+             AI By XanDec 
+        </div>
+
+        <!-- API Key Input Section -->
+        <div class="p-4 bg-gray-100 border-b border-gray-200 flex flex-col sm:flex-row items-center gap-2">
+            <input type="password" id="apiKeyInput" placeholder="Masukkan Google AI Studio API Key" class="flex-grow p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" />
+            <button id="saveApiKeyBtn" class="bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 ease-in-out text-sm">Simpan</button>
+            <div id="statusMessage" class="text-sm text-green-600 mt-2 sm:mt-0"></div>
+            <label for="imageToCodeToggle" class="ml-auto flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input type="checkbox" id="imageToCodeToggle" class="w-4 h-4 rounded border-gray-300 focus:ring-indigo-500" />
+                <span>Image to Code Generator</span>
+            </label>
+        </div>
+
+        <!-- Chat Box -->
+        <div id="chatBox" class="flex-grow p-6 overflow-y-auto space-y-5">
+            <div class="flex justify-start">
+                <div class="chat-bubble chat-bubble-ai">
+                 Halo saya  AI Anda. Silakan masukkan API key Anda untuk memulai. Anda bisa pakai Key ini AIzaSyAadyeVPiw5rq5KUGRBcfKVs0XFQmUw0Kc.
+                </div>
+            </div>
+        </div>
+
+        <!-- Message and Image Input Form -->
+        <form id="messageForm" class="p-4 bg-gray-100 border-t border-gray-200 flex items-center gap-3 flex-wrap">
+            <input type="file" id="imageInput" accept="image/*" class="hidden" />
+            <label for="imageInput" class="cursor-pointer p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-gray-600">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5 1.5-1.5-1.5m-3.182-3.182a2.25 2.25 0 0 0-3.182 0m2.25 2.25 1.5 1.5m-1.5 1.5L10.5 17.25m-2.25-1.5h-.008v-.008h.008v.008Zm0 1.5h-.008v-.008h.008v.008Zm0 1.5h-.008v-.008h.008v.008Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 7.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 1.5H5.25A3.75 3.75 0 0 0 1.5 5.25v13.5A3.75 3.75 0 0 0 5.25 22.5h13.5A3.75 3.75 0 0 0 22.5 18.75V5.25A3.75 3.75 0 0 0 18.75 1.5Z" />
+                </svg>
+            </label>
+            <div id="imagePreviewContainer" class="hidden flex-col items-end gap-2 p-2 rounded-lg bg-gray-200 max-w-[200px]">
+                <img id="imagePreview" src="" alt="Image Preview" class="image-preview" />
+                <button id="clearImageBtn" type="button" class="bg-gray-500 text-white text-xs px-2 py-1 rounded-full hover:bg-gray-600 transition-colors">Hapus</button>
+            </div>
+            <input type="text" id="messageInput" placeholder="Ketik pesan Anda..." class="flex-grow p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]" />
+            <button type="submit" id="sendBtn" class="bg-indigo-600 text-white p-3 rounded-full hover:bg-indigo-700 transition-colors duration-200 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.769 59.769 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                </svg>
+            </button>
+        </form>
+
+        <!-- Code Preview Container -->
+        <div id="codePreviewContainer" class="hidden"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const chatBox = document.getElementById('chatBox');
+            const messageForm = document.getElementById('messageForm');
+            const messageInput = document.getElementById('messageInput');
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const clearImageBtn = document.getElementById('clearImageBtn');
+            const modelName = 'gemini-2.5-flash-preview-05-20';
+            const chatHistory = [];
+            const imageToCodeToggle = document.getElementById('imageToCodeToggle');
+            const codePreviewContainer = document.getElementById('codePreviewContainer');
+
+            // Helper function to display messages
+            function displayMessage(parts, isUser  = false) {
+                const messageContainer = document.createElement('div');
+                messageContainer.className = `flex ${isUser  ? 'justify-end' : 'justify-start'}`;
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'flex flex-col gap-2 items-end';
+
+                parts.forEach(part => {
+                    if (part.text) {
+                        const textBubble = document.createElement('div');
+                        textBubble.className = `chat-bubble ${isUser  ? 'chat-bubble-user' : 'chat-bubble-ai'}`;
+                        textBubble.innerHTML = part.text.replace(/\n/g, '<br>');
+                        messageContent.appendChild(textBubble);
+                    }
+                    if (part.inlineData) {
+                        const imageElement = document.createElement('img');
+                        imageElement.src = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                        imageElement.className = 'image-preview';
+                        messageContent.appendChild(imageElement);
+                    }
+                });
+
+                messageContainer.appendChild(messageContent);
+                chatBox.appendChild(messageContainer);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // Load API key from localStorage
+            function loadApiKey() {
+                const storedKey = localStorage.getItem('geminiApiKey');
+                if (storedKey) {
+                    apiKeyInput.value = storedKey;
+                    statusMessage.textContent = 'API Key dimuat!';
+                }
+            }
+            loadApiKey();
+
+            // Event listener for saving API key
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('geminiApiKey', key);
+                    statusMessage.textContent = 'API Key berhasil disimpan!';
+                    statusMessage.className = 'text-sm text-green-600 mt-2 sm:mt-0';
+                } else {
+                    localStorage.removeItem('geminiApiKey');
+                    statusMessage.textContent = 'API Key dihapus.';
+                    statusMessage.className = 'text-sm text-red-600 mt-2 sm:mt-0';
+                }
+            });
+
+            // Fungsi untuk menampilkan preview kode
+            function displayCodePreview(codeText) {
+                codePreviewContainer.textContent = codeText;
+                codePreviewContainer.classList.remove('hidden');
+            }
+
+            // Fungsi untuk sembunyikan preview kode
+            function clearCodePreview() {
+                codePreviewContainer.textContent = '';
+                codePreviewContainer.classList.add('hidden');
+            }
+
+            // Event listener for image input change
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                clearCodePreview();
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                        imagePreviewContainer.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreviewContainer.classList.add('hidden');
+                    imagePreview.src = '';
+                }
+            });
+
+            // Event listener for clearing image preview
+            clearImageBtn.addEventListener('click', () => {
+                imageInput.value = '';
+                imagePreview.src = '';
+                imagePreviewContainer.classList.add('hidden');
+                clearCodePreview();
+            });
+
+            // Event listener for form submission
+            messageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userMessageText = messageInput.value.trim();
+                const imageFile = imageInput.files[0];
+                const apiKey = apiKeyInput.value.trim();
+                const isImageToCode = imageToCodeToggle.checked;
+
+                if (!userMessageText && !imageFile) return;
+                if (!apiKey) {
+                    displayMessage([{ text: 'Silakan masukkan API key Anda di atas.' }], false);
+                    return;
+                }
+
+                // Jika mode Image to Code aktif tapi tidak ada gambar, beri peringatan
+                if (isImageToCode && !imageFile) {
+                    displayMessage([{ text: 'Harap unggah gambar untuk menghasilkan kode.' }], false);
+                    return;
+                }
+
+                // Reset preview kode jika mode image to code aktif
+                if (isImageToCode) {
+                    clearCodePreview();
+                }
+
+                // Construct message parts
+                let userMessageParts = [];
+                if (userMessageText && !isImageToCode) {
+                    // Jika bukan mode image to code, kirim teks user seperti biasa
+                    userMessageParts.push({ text: userMessageText });
+                } else if (isImageToCode) {
+                    // Jika mode image to code, kirim instruksi khusus ke AI
+                    userMessageParts.push({ text: "Tolong buatkan kode dari gambar yang saya kirim." });
+                }
+                
+                // Read image file and get Base64 data
+                let imageData = null;
+                if (imageFile) {
+                    imageData = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(imageFile);
+                    });
+                    const base64Data = imageData.split(',')[1];
+                    userMessageParts.push({ 
+                        inlineData: { 
+                            mimeType: imageFile.type, 
+                            data: base64Data 
+                        } 
+                    });
+                }
+                
+                // Display user message
+                displayMessage(userMessageParts, true);
+                messageInput.value = '';
+                imageInput.value = '';
+                imagePreviewContainer.classList.add('hidden');
+
+                // Add user message to chat history
+                chatHistory.push({ role: "user", parts: userMessageParts });
+
+                // Display "thinking" indicator
+                const typingBubble = document.createElement('div');
+                typingBubble.id = 'typingIndicator';
+                typingBubble.className = 'flex justify-start';
+                typingBubble.innerHTML = '<div class="chat-bubble chat-bubble-ai italic text-gray-400">AI sedang berpikir...</div>';
+                chatBox.appendChild(typingBubble);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                try {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+                    const payload = { contents: chatHistory };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Kesalahan API: ${errorData.error.message}`);
+                    }
+
+                    const result = await response.json();
+                    const aiResponseParts = result.candidates?.[0]?.content?.parts;
+
+                    // Remove thinking indicator
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if (typingIndicator) {
+                        typingIndicator.remove();
+                    }
+                    
+                    if (aiResponseParts && aiResponseParts.length > 0) {
+                        if (isImageToCode) {
+                            // Gabungkan semua teks dari parts menjadi satu string kode
+                            const codeText = aiResponseParts.map(p => p.text || '').join('\n');
+                            displayCodePreview(codeText);
+                            // Tampilkan juga balasan AI dalam chat bubble (opsional)
+                            displayMessage(aiResponseParts, false);
+                            chatHistory.push({ role: "model", parts: aiResponseParts });
+                        } else {
+                            displayMessage(aiResponseParts, false);
+                            chatHistory.push({ role: "model", parts: aiResponseParts });
+                        }
+                    } else {
+                        displayMessage([{ text: 'Tidak ada respons dari AI. Coba lagi.' }], false);
+                    }
+
+                } catch (error) {
+                    console.error('Ada kesalahan:', error);
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if(typingIndicator) {
+                        typingIndicator.remove();
+                    }
+                    displayMessage([{ text: `Terjadi kesalahan: ${error.message}` }], false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
